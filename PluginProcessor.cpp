@@ -96,20 +96,20 @@ void FlangerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     
-    delay_buffer.setSize(getTotalNumOutputChannels(), 10000); //?????
+    delay_buffer.setSize(1, 100000); //non so quanti sample mettere dentro
     delay_buffer.clear();
-    copia_ingresso.setSize(getTotalNumOutputChannels(), 10000);
-    copia_ingresso.clear();
-    sample_rate = sampleRate;
     
-    delay_buffer_write = 0;
+    fs = sampleRate;
     
-    phase = 0.0;
     gff = 0.0;
     gfb = 0.0;
-    avg_lfo_amp = 1.0;
+    avg = 1.0;
     lfo_freq = 0.0;
     lfo_amp = 0.0;
+    phase = 0.0;
+    
+    dw = 0;
+    dr = 0.0;
     
 }
 
@@ -174,51 +174,52 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     }
     
     
-    int num_samples_in = buffer.getNumSamples();    
-    int num_samples_db = delay_buffer.getNumSamples();
+    int n_input = buffer.getNumSamples();
+    int n_delay = delay_buffer.getNumSamples();
     
+    const float* channel_in = buffer.getReadPointer(0);
     float* channel_out_L = buffer.getWritePointer(0);
     float* channel_out_R = buffer.getWritePointer(1);
-    const float* channel_in = buffer.getReadPointer(0);
     
     float freq = lfo_freq;
     float amp = lfo_amp;
-    float avg_amp = avg_lfo_amp;
-    float sample_feedforward = 0.0;
+    float avg_amp = avg;
     
-    for (int i = 0; i < num_samples_in; ++i)
+    
+    for (int i = 0; i < n_input; ++i)
     {
-        const float in = channel_in[i];
-        float pino = in;
         
-        copia_ingresso.setSample(0, delay_buffer_write, in); 
+        //we gather the input sample
+        float input = channel_in[i];      //R.I.P. Pino
         
-        //if (sample_feedforward)
-            //float in = in + sample_feedforward;
+        //we copy the input sample, as it is, in the copy_buffer
+        delay_buffer.setSample(0, dw, input);
         
-        float current_delay = LFO_delay(freq, amp, avg_amp, sample_rate);
+        //we calculate the delay given by the LFO, first in milliseconds, then in samples
+        float current_delay = LFO_value(freq, amp, avg_amp, fs);
+        dr = fmodl(dw - (current_delay * fs) + n_delay, n_delay);
         
+        //we interpolate the sample reading from the copy_buffer at the indexes corresponding to the given delay
+        float fraction = dr - floorf(dr);
+        int previous_sample = (int)floorf(dr);
+        int next_sample = (previous_sample + 1) % n_delay;
+        float interpolated_sample = fraction * delay_buffer.getSample(0, next_sample) + (1.0 - fraction) * delay_buffer.getSample(0, previous_sample);
         
-        delay_buffer_read = fmodf((float)delay_buffer_write - (float)(current_delay * sample_rate)+ (float)num_samples_db - 3.0, (float)num_samples_db);
+        //first, we use the interpolated_sample to add the sample back into the delay_buffer in order to create feedback
+        float sample_feedback = gfb * interpolated_sample;
+        delay_buffer.addSample(0, dw, sample_feedback);
         
-        float fraction = delay_buffer_read - floorf(delay_buffer_read);
-        int previous_sample = (int)floorf(delay_buffer_read) % num_samples_db;
-        int next_sample = (previous_sample + 1) % num_samples_db;
-        float interpolated_sample = fraction * copia_ingresso.getSample(0, next_sample) + (1.0 - fraction) * copia_ingresso.getSample(0, previous_sample);
+        //secondly, we use the interpolated_sample to create the feedforward effect
+        float sample_feedforward = gff * interpolated_sample;
         
+        //we get back the samples we need in order to create the output from the buffers
         
-        float sample_feedback = interpolated_sample * gfb;
+        channel_out_L[i] = input + sample_feedforward;
+        channel_out_R[i] = input + sample_feedforward;
         
-        delay_buffer.setSample(0, delay_buffer_write, sample_feedback);
+        //we wrap the write pointer around the length of the buffer in order to create circularity
+        dw = (dw + 1) % n_delay;
         
-        
-        sample_feedforward = gff * (copia_ingresso.getSample(0, delay_buffer_write) + delay_buffer.getSample(0, delay_buffer_write));
-        
-        
-        delay_buffer_write = (delay_buffer_write + 1) % num_samples_db;
-    
-        channel_out_L[i] = pino + sample_feedforward;
-        channel_out_R[i] = pino + sample_feedforward;
     }
 }
 
@@ -266,7 +267,7 @@ void FlangerAudioProcessor::setGfb(float val)
 
 void FlangerAudioProcessor::setDelay(float val)
 {
-    avg_lfo_amp = val;
+    avg = val;
 }
 
 void FlangerAudioProcessor::setLfoFreq(float val)
@@ -279,9 +280,9 @@ void FlangerAudioProcessor::setLfoAmp(float val)
     lfo_amp = val;
 }
 
-float FlangerAudioProcessor::LFO_delay(float freq, float amp, float avg, double sample_rate)
+float FlangerAudioProcessor::LFO_value(float freq, float amp, float avg, double fs)
 { 
-    phase += (float) ( M_PI * 2.0 *((double) freq / (double) sample_rate));
+    phase += (float) ( M_PI * 2.0 *((double) freq / (double) fs));
     
     if(phase > M_PI * 2.0)
     {

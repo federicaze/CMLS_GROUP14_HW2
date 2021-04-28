@@ -17,20 +17,20 @@ FlangerAudioProcessorEditor::FlangerAudioProcessorEditor (FlangerAudioProcessor&
     // editor's size to whatever you need it to be.
     setSize (600, 200);
     
-    gff_slider.setRange (0.0, 0.7);
+    gff_slider.setRange (0.0, 0.7, 0.01);
     gff_slider.setSliderStyle(juce::Slider::Rotary);
     gff_slider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 100, 20);
     gff_slider.addListener(this);
-    gff_label.setText ("Feedforward gain", juce::dontSendNotification);
+    gff_label.setText ("Feedforward", juce::dontSendNotification);
     
     addAndMakeVisible (gff_slider);
     addAndMakeVisible (gff_label);
     
-    gfb_slider.setRange (0.0, 0.7);
+    gfb_slider.setRange (0.0, 0.7, 0.01);
     gfb_slider.setSliderStyle(juce::Slider::Rotary);
     gfb_slider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 100, 20);
     gfb_slider.addListener(this);
-    gfb_label.setText ("Feedback gain", juce::dontSendNotification);
+    gfb_label.setText ("Feedback", juce::dontSendNotification);
     
     addAndMakeVisible (gfb_slider);
     addAndMakeVisible (gfb_label);
@@ -39,12 +39,12 @@ FlangerAudioProcessorEditor::FlangerAudioProcessorEditor (FlangerAudioProcessor&
     delay_slider.setSliderStyle(juce::Slider::Rotary);
     delay_slider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 100, 20);
     delay_slider.addListener(this);
-    delay_label.setText ("Delay", juce::dontSendNotification);
+    delay_label.setText ("Average delay", juce::dontSendNotification);
     
     addAndMakeVisible (delay_slider);
     addAndMakeVisible (delay_label);
     
-    lfo_freq_slider.setRange(0.1, 10.0, 0.1);
+    lfo_freq_slider.setRange(0.0, 10.0, 0.1);
     lfo_freq_slider.setSliderStyle(juce::Slider::Rotary);
     lfo_freq_slider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 100, 20);
     lfo_freq_slider.addListener(this);
@@ -53,7 +53,7 @@ FlangerAudioProcessorEditor::FlangerAudioProcessorEditor (FlangerAudioProcessor&
     addAndMakeVisible(lfo_freq_slider);
     addAndMakeVisible(lfo_freq_label);
     
-    lfo_amp_slider.setRange(0.01, 1, 0.01);
+    lfo_amp_slider.setRange(0.00, 1, 0.01);
     lfo_amp_slider.setSliderStyle(juce::Slider::Rotary);
     lfo_amp_slider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 100, 20);
     lfo_amp_slider.addListener(this);

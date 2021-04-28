@@ -67,20 +67,23 @@ public:
 
 private:
     
-    juce::AudioSampleBuffer delay_buffer; //ingresso + feedback
-    juce::AudioSampleBuffer copia_ingresso; //qui copiamo i valori in ingresso
-    float gff;
-    float gfb;
-    float avg_lfo_amp;
-    float lfo_freq;
-    float lfo_amp;
-    float phase;
-    double sample_rate;
-    int delay_buffer_write; // Write pointer into the delay buffer
-    float delay_buffer_read; //read pointer into the delay buffer
+    juce::AudioSampleBuffer delay_buffer; //buffer we use to create the delay effect
+    
+    int dw; //pointer we use to write into the delay_buffer
+    float dr; //pointer we use to read from the delay_buffer
+    
+    double fs; //sampling frequency of the input
+    
+    float gff; //gain applied to the feedforward signal
+    float gfb; //gain applied to the feedback signal
+    float avg; //average value of the LFO
+    float lfo_freq; //frequency value of the LFO
+    float lfo_amp; //amplitude value of the LFO
+    float phase; //intermediate variable we use to calculare the value of the delay
     
     
-    float LFO_delay(float freq, float amp, float avg, double sample_rate);
+    
+    float LFO_value(float freq, float amp, float avg, double sample_rate); //calculates the time (in ms) of the delay for each input sample
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessor)
