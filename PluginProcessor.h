@@ -59,11 +59,14 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
+    
+    //we declare some methods that will change the values of the main parameters when called
+    
     void setGff(float val);
     void setGfb(float val);
-    void setDelay(float val);
+    void setLfoOffset(float val);
     void setLfoFreq(float val);
-    void setLfoAmp(float val);
+    void setLfoWidth(float val);
 
 private:
     
@@ -76,14 +79,14 @@ private:
     
     float gff; //gain applied to the feedforward signal
     float gfb; //gain applied to the feedback signal
-    float avg; //average value of the LFO
+    float lfo_offset; //delay parameter of the LFO
     float lfo_freq; //frequency value of the LFO
-    float lfo_amp; //amplitude value of the LFO
+    float lfo_width; //width value of the LFO
     float phase; //intermediate variable we use to calculare the value of the delay
     
     
     
-    float LFO_value(float freq, float amp, float avg, double sample_rate); //calculates the time (in ms) of the delay for each input sample
+    float LFO_value(float freq, float amp, float avg, double sample_rate); //calculates the value of the lfo function that governs the delay
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessor)

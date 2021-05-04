@@ -35,17 +35,18 @@ private:
     juce::Slider gfb_slider; //gain feedback
     juce::Label gfb_label;
     
-    juce::Slider delay_slider; //average delay amount
-    juce::Label delay_label;
+    juce::Slider lfo_offset_slider; //LFO delay parameter
+    juce::Label lfo_offset_label;
     
     juce::Slider lfo_freq_slider; //LFO frequency
     juce::Label lfo_freq_label;
     
-    juce::Slider lfo_amp_slider; //LFO amplitude
-    juce::Label lfo_amp_label;
+    juce::Slider lfo_width_slider; //LFO sweep width
+    juce::Label lfo_width_label;
     
     
     //callback function that changes the values of a parameter everytime the corrisponding slider is touched
+    
     void sliderValueChanged(juce::Slider* slider) override;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessorEditor)

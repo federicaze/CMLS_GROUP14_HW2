@@ -93,19 +93,20 @@ void FlangerAudioProcessor::changeProgramName (int index, const juce::String& ne
 //==============================================================================
 void FlangerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    //we initialize the size of the buffer
     
-    delay_buffer.setSize(1, 100000); //non so quanti sample mettere dentro
+    delay_buffer.setSize(1, 10000);
     delay_buffer.clear();
+    
+    //we set the initial values of the parameters we will use in the processBlock method
     
     fs = sampleRate;
     
     gff = 0.0;
     gfb = 0.0;
-    avg = 1.0;
+    lfo_offset = 0.0;
     lfo_freq = 0.0;
-    lfo_amp = 0.0;
+    lfo_width = 0.0;
     phase = 0.0;
     
     dw = 0;
@@ -173,6 +174,7 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         // ..do something to the data...
     }
     
+    //we declare and initialize some local variables we need inside the for loop
     
     int n_input = buffer.getNumSamples();
     int n_delay = delay_buffer.getNumSamples();
@@ -182,8 +184,8 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     float* channel_out_R = buffer.getWritePointer(1);
     
     float freq = lfo_freq;
-    float amp = lfo_amp;
-    float avg_amp = avg;
+    float width = lfo_width;
+    float offset = lfo_offset;
     
     
     for (int i = 0; i < n_input; ++i)
@@ -196,12 +198,12 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         delay_buffer.setSample(0, dw, input);
         
         //we calculate the delay given by the LFO, first in milliseconds, then in samples
-        float current_delay = LFO_value(freq, amp, avg_amp, fs);
-        dr = fmodl(dw - (current_delay * fs) + n_delay, n_delay);
+        float current_delay = LFO_value(freq, width, offset, fs);
+        dr = fmodl(dw - (current_delay * fs) + n_delay - 1, n_delay);
         
         //we interpolate the sample reading from the copy_buffer at the indexes corresponding to the given delay
         float fraction = dr - floorf(dr);
-        int previous_sample = (int)floorf(dr);
+        int previous_sample = (int)floorf(dr) % n_delay;
         int next_sample = (previous_sample + 1) % n_delay;
         float interpolated_sample = fraction * delay_buffer.getSample(0, next_sample) + (1.0 - fraction) * delay_buffer.getSample(0, previous_sample);
         
@@ -212,7 +214,7 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         //secondly, we use the interpolated_sample to create the feedforward effect
         float sample_feedforward = gff * interpolated_sample;
         
-        //we get back the samples we need in order to create the output from the buffers
+        //we send the samples to the output bus
         
         channel_out_L[i] = input + sample_feedforward;
         channel_out_R[i] = input + sample_feedforward;
@@ -255,6 +257,8 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new FlangerAudioProcessor();
 }
 
+//we implement the methods we need to controll the parameters through the GUI
+
 void FlangerAudioProcessor::setGff(float val)
 {
     gff = val;
@@ -265,9 +269,9 @@ void FlangerAudioProcessor::setGfb(float val)
     gfb = val;
 }
 
-void FlangerAudioProcessor::setDelay(float val)
+void FlangerAudioProcessor::setLfoOffset(float val)
 {
-    avg = val;
+    lfo_offset = val;
 }
 
 void FlangerAudioProcessor::setLfoFreq(float val)
@@ -275,12 +279,14 @@ void FlangerAudioProcessor::setLfoFreq(float val)
     lfo_freq = val;
 }
 
-void FlangerAudioProcessor::setLfoAmp(float val)
+void FlangerAudioProcessor::setLfoWidth(float val)
 {
-    lfo_amp = val;
+    lfo_width = val;
 }
 
-float FlangerAudioProcessor::LFO_value(float freq, float amp, float avg, double fs)
+//we implement the method that calculates the value of the delay in milliseconds
+
+float FlangerAudioProcessor::LFO_value(float freq, float amp, float offset, double fs)
 { 
     phase += (float) ( M_PI * 2.0 *((double) freq / (double) fs));
     
@@ -289,5 +295,5 @@ float FlangerAudioProcessor::LFO_value(float freq, float amp, float avg, double 
         phase -= M_PI * 2.0;
     }
     
-    return (avg + amp * (float) sin ((double) phase))/1000;
+    return (offset + amp * (1 + (float) sin ((double) phase)))/1000;
 }
