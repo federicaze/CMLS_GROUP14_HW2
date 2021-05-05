@@ -16,7 +16,7 @@ FlangerAudioProcessorEditor::FlangerAudioProcessorEditor (FlangerAudioProcessor&
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     
-    //we set the dimensions of the GUI window and the appearence of the GUI elements
+    //we set the dimensions of the GUI window and the appearance of the GUI elements
     
     setSize (600, 200);
     
@@ -29,7 +29,7 @@ FlangerAudioProcessorEditor::FlangerAudioProcessorEditor (FlangerAudioProcessor&
     addAndMakeVisible (gff_slider);
     addAndMakeVisible (gff_label);
     
-    gfb_slider.setRange (0.0, 0.7, 0.01);
+    gfb_slider.setRange (0.0, 0.7, 0.713125);
     gfb_slider.setSliderStyle(juce::Slider::Rotary);
     gfb_slider.setTextBoxStyle (juce::Slider::TextBoxAbove, false, 100, 20);
     gfb_slider.addListener(this);

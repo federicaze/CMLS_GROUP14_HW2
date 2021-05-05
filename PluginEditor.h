@@ -29,6 +29,8 @@ private:
     // access the processor object that created it.
     FlangerAudioProcessor& audioProcessor;
     
+    //we declare the sliders and the labels
+    
     juce::Slider gff_slider; //gain feedforward
     juce::Label gff_label;
     

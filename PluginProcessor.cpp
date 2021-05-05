@@ -194,14 +194,14 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         //we gather the input sample
         float input = channel_in[i];      //R.I.P. Pino
         
-        //we copy the input sample, as it is, in the copy_buffer
+        //we copy the input sample, as it is, in the delay_buffer
         delay_buffer.setSample(0, dw, input);
         
         //we calculate the delay given by the LFO, first in milliseconds, then in samples
         float current_delay = LFO_value(freq, width, offset, fs);
         dr = fmodl(dw - (current_delay * fs) + n_delay - 1, n_delay);
         
-        //we interpolate the sample reading from the copy_buffer at the indexes corresponding to the given delay
+        //we interpolate the sample reading from the delay_buffer at the indexes corresponding to the given delay
         float fraction = dr - floorf(dr);
         int previous_sample = (int)floorf(dr) % n_delay;
         int next_sample = (previous_sample + 1) % n_delay;
